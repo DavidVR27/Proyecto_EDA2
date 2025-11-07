@@ -38,6 +38,6 @@ int main() {
     }
 
     archivo.close();
-    cout << "Archivo grafo.csv generado correctamente con " << N << " nodos." << endl;
+    cout << "Archivo grafo.csv generado correctamente con " << N << " nodos" << endl;
     return 0;
 }

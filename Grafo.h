@@ -37,7 +37,7 @@ public:
     void cargarDesdeCSV(const string& archivoCSV) {
         ifstream archivo(archivoCSV);
         if (!archivo.is_open()) {
-            cout << "❌ Error al abrir el archivo CSV." << endl;
+            cout << "Error al abrir el archivo CSV." << endl;
             return;
         }
 
@@ -70,7 +70,7 @@ public:
 
         archivo.close();
         numNodos = adyacencia.size() - 1;
-        cout << "✅ Grafo cargado correctamente con " << numNodos << " nodos.\n";
+        cout << "Grafo cargado correctamente con " << numNodos << " nodos.\n";
     }
 
     // Mostrar todo el grafo (para pruebas)

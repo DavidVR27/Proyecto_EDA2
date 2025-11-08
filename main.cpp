@@ -10,11 +10,11 @@ int main() {
 
     // Medir tiempo de carga
     auto inicio = high_resolution_clock::now();
-    g.cargarDesdeCSV("grafo.csv"); // Asegúrate de tener el archivo generado
+    g.cargarDesdeCSV("grafo.csv");
     auto fin = high_resolution_clock::now();
 
     auto duracion = duration_cast<milliseconds>(fin - inicio).count();
-    cout << "\n⏱ Tiempo de carga del grafo: " << duracion << " ms" << endl;
+    cout << "\nTiempo de carga del grafo: " << duracion << " ms" << endl;
 
     cout << "\n--- Grafo cargado ---\n";
     g.mostrarGrafo();

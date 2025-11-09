@@ -1,33 +1,106 @@
-#include <iostream>
-#include <chrono>
 #include "Grafo.h"
-
+#include <queue>
+#include <climits>
+#include <vector>
+#include <algorithm>
+#include <fstream>
+#include <chrono>
 using namespace std;
-using namespace std::chrono;
 
+void dijkstra(const Grafo& g, int origen, const string& nombreArchivo, const string& tipoVehiculo) {
+    int n = g.obtenerNumNodos();
+    vector<int> dist(n + 1, INT_MAX);
+    vector<int> previo(n + 1, -1);
+    dist[origen] = 0;
+
+    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<>> pq;
+    pq.push({0, origen});
+
+    while (!pq.empty()) {
+        int u = pq.top().second;
+        int d = pq.top().first;
+        pq.pop();
+
+        if (d > dist[u]) continue;
+
+        for (auto& arista : g.obtenerAdyacentes(u)) {
+            int v = arista.destino;
+            int peso = arista.peso;
+            if (dist[u] + peso < dist[v]) {
+                dist[v] = dist[u] + peso;
+                previo[v] = u;
+                pq.push({dist[v], v});
+            }
+        }
+    }
+
+    // Crear archivo CSV para las rutas
+    ofstream archivo(nombreArchivo);
+    archivo << "vehiculo,origen,destino,ruta,distancia\n";
+
+    cout << "\n--- RUTAS " << tipoVehiculo << " ---\n";
+    for (int destino = 1; destino <= n; destino++) {
+        if (destino == origen) continue;
+        if (dist[destino] == INT_MAX) continue; // Sin conexión
+
+        vector<int> ruta;
+        for (int v = destino; v != -1; v = previo[v])
+            ruta.push_back(v);
+        reverse(ruta.begin(), ruta.end());
+
+        // Mostrar en consola
+        cout << tipoVehiculo << ": ";
+        for (size_t i = 0; i < ruta.size(); i++) {
+            cout << ruta[i];
+            if (i < ruta.size() - 1) cout << " -> ";
+        }
+        cout << " (Distancia: " << dist[destino] << ")\n";
+
+        // Guardar en CSV
+        archivo << tipoVehiculo << "," << origen << "," << destino << ",\"";
+        for (size_t i = 0; i < ruta.size(); i++) {
+            archivo << ruta[i];
+            if (i < ruta.size() - 1) archivo << "-";
+        }
+        archivo << "\"," << dist[destino] << "\n";
+    }
+
+    archivo.close();
+    cout << "Rutas de " << tipoVehiculo << " guardadas en " << nombreArchivo << "\n";
+}
+
+// ========================================================
+// MAIN: Carga grafo y ejecuta Dijkstra para los 3 vehículos
+// ========================================================
 int main() {
     Grafo g;
 
-    // Medir tiempo de carga
-    auto inicio = high_resolution_clock::now();
+    // Tiempo de carga del grafo
+    auto inicioCarga = chrono::high_resolution_clock::now();
     g.cargarDesdeCSV("grafo.csv");
-    auto fin = high_resolution_clock::now();
+    auto finCarga = chrono::high_resolution_clock::now();
+    auto tiempoCarga = chrono::duration_cast<chrono::milliseconds>(finCarga - inicioCarga).count();
+    cout << "\nTiempo de carga del grafo: " << tiempoCarga << " ms\n";
 
-    auto duracion = duration_cast<milliseconds>(fin - inicio).count();
-    cout << "\nTiempo de carga del grafo: " << duracion << " ms" << endl;
-
-    cout << "\n--- Grafo cargado ---\n";
     g.mostrarGrafo();
 
-    // Análisis del grafo
-    int totalAristas = 0;
-    for (int i = 1; i <= g.obtenerNumNodos(); i++)
-        totalAristas += g.obtenerAdyacentes(i).size();
+    // Nodos de depósito
+    int depositoBomberos = 1;
+    int depositoAmbulancia = 5;
+    int depositoPatrulla = 10;
 
-    double promedio = (double)totalAristas / g.obtenerNumNodos();
+    // Medir tiempo de ejecución de Dijkstra
+    auto inicioDijkstra = chrono::high_resolution_clock::now();
 
-    cout << "\n Numero total de aristas: " << totalAristas << endl;
-    cout << "Promedio de conexiones por nodo: " << promedio << endl;
+    dijkstra(g, depositoBomberos, "rutas_bomberos.csv", "Bomberos");
+    dijkstra(g, depositoAmbulancia, "rutas_ambulancia.csv", "Ambulancia");
+    dijkstra(g, depositoPatrulla, "rutas_patrulla.csv", "Patrulla");
+
+    auto finDijkstra = chrono::high_resolution_clock::now();
+    auto tiempoDijkstra = chrono::duration_cast<chrono::milliseconds>(finDijkstra - inicioDijkstra).count();
+
+    cout << "\nTiempo total de Dijkstra: " << tiempoDijkstra << " ms\n";
+    cout << "Cálculo de rutas completado para todos los vehículos.\n";
 
     return 0;
 }
